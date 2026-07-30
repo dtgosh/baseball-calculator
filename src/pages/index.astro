@@ -113,10 +113,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	<div class="page">
 		<div class="page-inner">
 			<header class="header">
-				<div>
-					<div class="eyebrow">BASEBALL WIN EXPECTANCY · KBO</div>
-					<h1 class="title">야구 계산기</h1>
-				</div>
+				<h1 class="title">야구 계산기</h1>
 			</header>
 
 			<main class="main">
@@ -396,10 +393,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 				</section>
 			</main>
 
-			<footer class="footer">
-				<span>모든 계산은 브라우저에서 수행 — Astro 정적 페이지 · GitHub Pages 배포에 적합</span>
-				<span>샘플 데이터 기준 · 실제 기록으로 수정해 사용하세요</span>
-			</footer>
+			<footer class="footer">© 2026 dtgosh. All rights reserved.</footer>
 		</div>
 	</div>
 </Layout>
@@ -426,13 +420,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		gap: 16px;
 		padding: 32px 0 20px 0;
 		border-bottom: 2px solid #1b1f27;
-	}
-	.eyebrow {
-		font-size: 12px;
-		letter-spacing: 0.14em;
-		color: #626a76;
-		font-weight: 500;
-		margin-bottom: 6px;
 	}
 	.title {
 		margin: 0;
@@ -760,10 +747,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 
 	.footer {
 		margin-top: 20px;
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
-		gap: 8px;
 		font-size: 11px;
 		color: #a3a9b3;
 	}
