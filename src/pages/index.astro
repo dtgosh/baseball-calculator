@@ -1,11 +1,1048 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// ---- constants (mirrored exactly in the client <script> for the live calculator) ----
+const L = { rpg: 5.15, ops: 0.735, avg: 0.265, era: 4.6, whip: 1.32, k9: 7.4, der: 0.69, sr: 70 };
+const TEAMS = [
+	'LG 트윈스',
+	'한화 이글스',
+	'KIA 타이거즈',
+	'삼성 라이온즈',
+	'두산 베어스',
+	'SSG 랜더스',
+	'NC 다이노스',
+	'롯데 자이언츠',
+	'KT 위즈',
+	'키움 히어로즈',
+];
+const W9 = [1.1, 1.07, 1.05, 1.03, 1.0, 0.97, 0.95, 0.92, 0.9];
+
+const bat = (rows: [string, string, string, string][]) =>
+	rows.map((r) => ({ name: r[0], avg: r[1], ops: r[2], sb: r[3] }));
+const arm = (rows: [string, string, string, string][]) =>
+	rows.map((r) => ({ name: r[0], era: r[1], whip: r[2], k9: r[3] }));
+
+const initRoster = () => ({
+	away: {
+		bat: bat([
+			['김지환', '0.302', '0.842', '21'],
+			['박세진', '0.288', '0.815', '14'],
+			['이현우', '0.295', '0.878', '8'],
+			['최민준', '0.310', '0.901', '5'],
+			['정재윤', '0.276', '0.796', '11'],
+			['오승민', '0.265', '0.744', '6'],
+			['한도윤', '0.258', '0.712', '9'],
+			['임규현', '0.249', '0.688', '4'],
+			['송지호', '0.241', '0.655', '12'],
+		]),
+		arms: arm([
+			['문세혁', '3.42', '1.18', '8.9'],
+			['정해일', '3.85', '1.28', '8.2'],
+			['구자혁', '4.10', '1.31', '7.6'],
+			['민동엽', '4.32', '1.36', '7.2'],
+			['채상윤', '2.88', '1.09', '9.8'],
+		]),
+		bench: bat([
+			['강태민', '0.262', '0.712', '3'],
+			['유정호', '0.255', '0.688', '5'],
+			['신재웅', '0.248', '0.665', '2'],
+			['곽민서', '0.240', '0.641', '6'],
+		]),
+	},
+	home: {
+		bat: bat([
+			['이강준', '0.294', '0.822', '17'],
+			['김태오', '0.285', '0.801', '12'],
+			['박준서', '0.301', '0.865', '6'],
+			['최우진', '0.307', '0.884', '4'],
+			['장하람', '0.272', '0.780', '9'],
+			['윤세찬', '0.263', '0.735', '7'],
+			['강민재', '0.256', '0.702', '5'],
+			['조현탁', '0.247', '0.671', '3'],
+			['백승우', '0.243', '0.658', '8'],
+		]),
+		arms: arm([
+			['배성준', '3.78', '1.24', '8.1'],
+			['홍기표', '3.92', '1.26', '8.4'],
+			['전성규', '4.18', '1.33', '7.4'],
+			['양지훈', '4.40', '1.38', '6.9'],
+			['국영호', '3.05', '1.12', '9.3'],
+		]),
+		bench: bat([
+			['남기훈', '0.259', '0.705', '2'],
+			['도상원', '0.252', '0.682', '4'],
+			['문진우', '0.246', '0.659', '1'],
+			['서병규', '0.238', '0.635', '3'],
+		]),
+	},
+});
+
+const roster = initRoster();
+const sel = { away: '1', home: '0' };
+const roles = ['선발', '중계1', '중계2', '중계3', '마무리'];
+
+const num = (v: string, d: number) => {
+	const n = parseFloat(v);
+	return isFinite(n) ? n : d;
+};
+const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
+const wStat = (list: { [k: string]: string }[], key: string, def: number, lo: number, hi: number) => {
+	let sw = 0,
+		so = 0;
+	list.forEach((b, i) => {
+		const o = clamp(num(b[key], def), lo, hi);
+		so += o * W9[i];
+		sw += W9[i];
+	});
+	return sw > 0 ? so / sw : def;
+};
+
+const sides = (['away', 'home'] as const).map((side) => ({
+	side,
+	roleLabel: side === 'away' ? '원정' : '홈',
+	accent: side === 'away' ? 'oklch(0.50 0.13 40)' : 'oklch(0.50 0.13 255)',
+	teamIdx: sel[side],
+	lineupOps: wStat(roster[side].bat, 'ops', L.ops, 0.2, 1.5).toFixed(3),
+	batters: roster[side].bat,
+	arms: roster[side].arms,
+	bench: roster[side].bench,
+}));
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="야구 계산기 · KBO 승률 예측">
+	<div class="page">
+		<div class="page-inner">
+			<header class="header">
+				<div>
+					<div class="eyebrow">BASEBALL WIN EXPECTANCY · KBO</div>
+					<h1 class="title">야구 계산기</h1>
+				</div>
+			</header>
+
+			<main class="main">
+				<section class="card">
+					<h2 class="card-title">라인업 입력</h2>
+					<div class="roster-grid">
+						{
+							sides.map((r) => (
+								<div class="roster-side">
+									<div class="roster-side-head">
+										<span class="chip" style={`background: ${r.accent};`}>
+											{r.roleLabel}
+										</span>
+										<select class="team-select" data-side={r.side} data-field="team">
+											{TEAMS.map((name, i) => (
+												<option value={String(i)} selected={String(i) === r.teamIdx}>
+													{name}
+												</option>
+											))}
+										</select>
+										<span class="ops-label" id={`ops-${r.side}`}>
+											OPS {r.lineupOps}
+										</span>
+									</div>
+
+									<div class="col-header bat-grid">
+										<span>타순</span>
+										<span>선수</span>
+										<span class="ta-right">AVG</span>
+										<span class="ta-right">OPS</span>
+										<span class="ta-right">도루</span>
+									</div>
+									<div class="row-list">
+										{r.batters.map((b, i) => (
+											<div class="row bat-grid">
+												<span class="row-no">{i + 1}</span>
+												<input
+													type="text"
+													class="in in-name"
+													value={b.name}
+													data-side={r.side}
+													data-group="bat"
+													data-index={i}
+													data-field="name"
+												/>
+												<input
+													type="number"
+													step="0.001"
+													min="0"
+													class="in in-num"
+													value={b.avg}
+													data-side={r.side}
+													data-group="bat"
+													data-index={i}
+													data-field="avg"
+												/>
+												<input
+													type="number"
+													step="0.001"
+													min="0"
+													class="in in-num"
+													value={b.ops}
+													data-side={r.side}
+													data-group="bat"
+													data-index={i}
+													data-field="ops"
+												/>
+												<input
+													type="number"
+													step="1"
+													min="0"
+													class="in in-num"
+													value={b.sb}
+													data-side={r.side}
+													data-group="bat"
+													data-index={i}
+													data-field="sb"
+												/>
+											</div>
+										))}
+									</div>
+
+									<div class="col-header arm-grid arm-sep">
+										<span>마운드</span>
+										<span>투수</span>
+										<span class="ta-right">ERA</span>
+										<span class="ta-right">WHIP</span>
+										<span class="ta-right">K/9</span>
+									</div>
+									<div class="row-list">
+										{r.arms.map((p, i) => (
+											<div class="row arm-grid">
+												<span class="row-role">{roles[i]}</span>
+												<input
+													type="text"
+													class="in in-name"
+													value={p.name}
+													data-side={r.side}
+													data-group="arms"
+													data-index={i}
+													data-field="name"
+												/>
+												<input
+													type="number"
+													step="0.01"
+													min="0"
+													class="in in-num"
+													value={p.era}
+													data-side={r.side}
+													data-group="arms"
+													data-index={i}
+													data-field="era"
+												/>
+												<input
+													type="number"
+													step="0.01"
+													min="0"
+													class="in in-num"
+													value={p.whip}
+													data-side={r.side}
+													data-group="arms"
+													data-index={i}
+													data-field="whip"
+												/>
+												<input
+													type="number"
+													step="0.1"
+													min="0"
+													class="in in-num"
+													value={p.k9}
+													data-side={r.side}
+													data-group="arms"
+													data-index={i}
+													data-field="k9"
+												/>
+											</div>
+										))}
+									</div>
+
+									<div class="col-header bat-grid arm-sep">
+										<span>후보</span>
+										<span>선수</span>
+										<span class="ta-right">AVG</span>
+										<span class="ta-right">OPS</span>
+										<span class="ta-right">도루</span>
+									</div>
+									<div class="row-list">
+										{r.bench.map((b, i) => (
+											<div class="row bat-grid">
+												<span class="row-no bench-no">{`B${i + 1}`}</span>
+												<input
+													type="text"
+													class="in in-name bench-in"
+													value={b.name}
+													data-side={r.side}
+													data-group="bench"
+													data-index={i}
+													data-field="name"
+												/>
+												<input
+													type="number"
+													step="0.001"
+													min="0"
+													class="in in-num bench-in"
+													value={b.avg}
+													data-side={r.side}
+													data-group="bench"
+													data-index={i}
+													data-field="avg"
+												/>
+												<input
+													type="number"
+													step="0.001"
+													min="0"
+													class="in in-num bench-in"
+													value={b.ops}
+													data-side={r.side}
+													data-group="bench"
+													data-index={i}
+													data-field="ops"
+												/>
+												<input
+													type="number"
+													step="1"
+													min="0"
+													class="in in-num bench-in"
+													value={b.sb}
+													data-side={r.side}
+													data-group="bench"
+													data-index={i}
+													data-field="sb"
+												/>
+											</div>
+										))}
+									</div>
+								</div>
+							))
+						}
+					</div>
+				</section>
+
+				<div class="calc-row">
+					<button id="calc-btn" class="calc-btn" type="button">계산하기</button>
+					<span id="dirty-note" class="dirty-note" style="display: none;">
+						입력이 변경되었습니다 · 다시 계산하세요
+					</span>
+				</div>
+
+				<section id="result-section" class="card result-section" style="display: none;">
+					<div class="result-inner">
+						<h2 class="card-title">계산 결과</h2>
+
+						<div class="pct-row">
+							<div class="pct-block">
+								<div class="pct-name away-color">
+									<span id="away-name-text"></span> <span class="muted-label">원정</span>
+								</div>
+								<div class="pct-num"><span id="away-pct"></span><span class="pct-sign">%</span></div>
+							</div>
+							<div class="pct-caption">승리 확률</div>
+							<div class="pct-block ta-right">
+								<div class="pct-name home-color">
+									<span class="muted-label">홈</span> <span id="home-name-text"></span>
+								</div>
+								<div class="pct-num"><span id="home-pct"></span><span class="pct-sign">%</span></div>
+							</div>
+						</div>
+
+						<div class="prob-bar-wrap">
+							<div class="prob-bar">
+								<div id="prob-away-bar" class="prob-away"></div>
+								<div class="prob-home"></div>
+							</div>
+							<div class="prob-tick"></div>
+						</div>
+
+						<div class="score-box">
+							<div class="score-label">예상 스코어</div>
+							<div class="score-num">
+								<span id="away-score" class="away-color"></span><span class="score-colon">:</span><span
+									id="home-score"
+									class="home-color"></span>
+							</div>
+						</div>
+
+						<div class="factors">
+							<div class="factors-title">요인 분해</div>
+							<div class="factors-list">
+								<div class="factor-row">
+									<span class="factor-label">선발 매치업</span>
+									<span id="factor-detail-0" class="factor-detail"></span>
+									<span id="factor-imp-0" class="factor-imp"></span>
+								</div>
+								<div class="factor-row">
+									<span class="factor-label">불펜·마무리</span>
+									<span id="factor-detail-1" class="factor-detail"></span>
+									<span id="factor-imp-1" class="factor-imp"></span>
+								</div>
+								<div class="factor-row">
+									<span class="factor-label">라인업 타격</span>
+									<span id="factor-detail-2" class="factor-detail"></span>
+									<span id="factor-imp-2" class="factor-imp"></span>
+								</div>
+								<div class="factor-row">
+									<span class="factor-label">주루</span>
+									<span id="factor-detail-3" class="factor-detail"></span>
+									<span id="factor-imp-3" class="factor-imp"></span>
+								</div>
+								<div class="factor-row">
+									<span class="factor-label">홈 어드밴티지</span>
+									<span id="factor-detail-4" class="factor-detail"></span>
+									<span id="factor-imp-4" class="factor-imp"></span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+			</main>
+
+			<footer class="footer">
+				<span>모든 계산은 브라우저에서 수행 — Astro 정적 페이지 · GitHub Pages 배포에 적합</span>
+				<span>샘플 데이터 기준 · 실제 기록으로 수정해 사용하세요</span>
+			</footer>
+		</div>
+	</div>
 </Layout>
+
+<style>
+	.page {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0 20px 48px 20px;
+		box-sizing: border-box;
+	}
+	.page-inner {
+		width: 100%;
+		max-width: 1180px;
+	}
+
+	.header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 32px 0 20px 0;
+		border-bottom: 2px solid #1b1f27;
+	}
+	.eyebrow {
+		font-size: 12px;
+		letter-spacing: 0.14em;
+		color: #626a76;
+		font-weight: 500;
+		margin-bottom: 6px;
+	}
+	.title {
+		margin: 0;
+		font-size: clamp(22px, 3.4vw, 30px);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.main {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 20px;
+		margin-top: 24px;
+	}
+
+	.card {
+		flex: 1 1 100%;
+		background: #ffffff;
+		border: 1px solid #e2e5ea;
+		border-radius: 12px;
+		padding: 20px;
+		box-sizing: border-box;
+	}
+	.card-title {
+		margin: 0 0 14px 0;
+		font-size: 15px;
+		font-weight: 700;
+	}
+
+	.roster-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 14px;
+	}
+	.roster-side {
+		flex: 1 1 480px;
+		min-width: 0;
+		border: 1px solid #e8eaef;
+		border-radius: 10px;
+		padding: 14px;
+		box-sizing: border-box;
+	}
+	.roster-side-head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 12px;
+	}
+	.chip {
+		font-size: 11px;
+		font-weight: 700;
+		color: #ffffff;
+		border-radius: 5px;
+		padding: 3px 8px;
+		letter-spacing: 0.04em;
+		flex-shrink: 0;
+	}
+	.team-select {
+		flex: 1;
+		min-width: 0;
+		padding: 7px 8px;
+		border: 1px solid #d4d8df;
+		border-radius: 7px;
+		background: #fbfbfc;
+		font-size: 13.5px;
+		font-weight: 500;
+		color: #1b1f27;
+	}
+	.ops-label {
+		font-size: 11.5px;
+		color: #8a919d;
+		font-family: 'IBM Plex Mono', monospace;
+		white-space: nowrap;
+	}
+
+	.col-header {
+		display: grid;
+		gap: 6px;
+		padding: 0 8px 4px 8px;
+		font-size: 10.5px;
+		color: #8a919d;
+		letter-spacing: 0.04em;
+	}
+	.arm-sep {
+		padding: 12px 8px 4px 8px;
+		border-top: 1px solid #eceef1;
+		margin-top: 12px;
+	}
+	.bat-grid {
+		grid-template-columns: 28px 1fr 60px 64px 48px;
+	}
+	.arm-grid {
+		grid-template-columns: 44px 1fr 56px 56px 52px;
+	}
+	.ta-right {
+		text-align: right;
+	}
+
+	.row-list {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.row {
+		display: grid;
+		gap: 6px;
+		align-items: center;
+		padding: 0 8px;
+	}
+	.row-no {
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 12px;
+		color: #8a919d;
+	}
+	.row-role {
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 11px;
+		color: #8a919d;
+	}
+	.bench-no {
+		color: #b6bcc5;
+	}
+
+	.in {
+		width: 100%;
+		box-sizing: border-box;
+		padding: 5px 8px;
+		border: 1px solid #e2e5ea;
+		border-radius: 6px;
+		background: #fbfbfc;
+		font-size: 12.5px;
+		color: #1b1f27;
+	}
+	.in-num {
+		padding: 5px 6px;
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 12px;
+		text-align: right;
+	}
+	.in:focus {
+		border-color: oklch(0.5 0.13 255);
+		outline: none;
+		background: #ffffff;
+	}
+	.bench-in {
+		color: #4a515c;
+	}
+
+	.calc-row {
+		flex: 1 1 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 14px;
+		margin: 2px 0;
+	}
+	.calc-btn {
+		background: #1b1f27;
+		color: #ffffff;
+		border: none;
+		border-radius: 8px;
+		padding: 13px 32px;
+		font-size: 14px;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		cursor: pointer;
+	}
+	.calc-btn:hover {
+		background: #333a45;
+	}
+	.dirty-note {
+		font-size: 12px;
+		color: oklch(0.5 0.13 40);
+		font-weight: 500;
+	}
+
+	.result-section {
+		padding: 24px 20px;
+	}
+	.result-inner {
+		max-width: 760px;
+		margin: 0 auto;
+	}
+
+	.pct-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-end;
+		gap: 12px;
+		margin-top: 18px;
+	}
+	.pct-block {
+		min-width: 0;
+	}
+	.pct-name {
+		font-size: 13px;
+		font-weight: 700;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.muted-label {
+		font-weight: 500;
+		color: #8a919d;
+	}
+	.pct-num {
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: clamp(32px, 4.5vw, 44px);
+		font-weight: 600;
+		line-height: 1.1;
+	}
+	.pct-sign {
+		font-size: 18px;
+		color: #626a76;
+	}
+	.pct-caption {
+		font-size: 11px;
+		color: #8a919d;
+		padding-bottom: 10px;
+		white-space: nowrap;
+	}
+
+	.away-color {
+		color: oklch(0.5 0.13 40);
+	}
+	.home-color {
+		color: oklch(0.5 0.13 255);
+	}
+
+	.prob-bar-wrap {
+		position: relative;
+		margin-top: 12px;
+	}
+	.prob-bar {
+		display: flex;
+		height: 10px;
+		border-radius: 5px;
+		overflow: hidden;
+		background: #eceef1;
+	}
+	.prob-away {
+		width: 50%;
+		background: oklch(0.5 0.13 40);
+	}
+	.prob-home {
+		flex: 1;
+		background: oklch(0.5 0.13 255);
+	}
+	.prob-tick {
+		position: absolute;
+		left: 50%;
+		top: -3px;
+		width: 2px;
+		height: 16px;
+		background: #1b1f27;
+		opacity: 0.55;
+	}
+
+	.score-box {
+		margin-top: 18px;
+		padding: 16px;
+		border: 1px solid #e8eaef;
+		border-radius: 10px;
+		background: #fafbfc;
+		text-align: center;
+	}
+	.score-label {
+		font-size: 11px;
+		color: #626a76;
+		letter-spacing: 0.04em;
+		margin-bottom: 6px;
+	}
+	.score-num {
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 34px;
+		font-weight: 600;
+		line-height: 1;
+	}
+	.score-colon {
+		color: #b6bcc5;
+		padding: 0 8px;
+	}
+
+	.factors {
+		margin-top: 18px;
+		border-top: 1px solid #eceef1;
+		padding-top: 14px;
+	}
+	.factors-title {
+		font-size: 12px;
+		font-weight: 700;
+		color: #626a76;
+		margin-bottom: 10px;
+	}
+	.factors-list {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.factor-row {
+		display: grid;
+		grid-template-columns: 110px 1fr auto;
+		align-items: baseline;
+		gap: 10px;
+		font-size: 12.5px;
+	}
+	.factor-label {
+		color: #1b1f27;
+		font-weight: 500;
+	}
+	.factor-detail {
+		color: #8a919d;
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 11.5px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.factor-imp {
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 12.5px;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	.footer {
+		margin-top: 20px;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 8px;
+		font-size: 11px;
+		color: #a3a9b3;
+	}
+</style>
+
+<script>
+	// ---- fixed model constants (homeAdv=4, eraWeight=1, showBreakdown=true baked in) ----
+	const L = { rpg: 5.15, ops: 0.735, avg: 0.265, era: 4.6, whip: 1.32, k9: 7.4, der: 0.69, sr: 70 };
+	const TEAMS = [
+		'LG 트윈스',
+		'한화 이글스',
+		'KIA 타이거즈',
+		'삼성 라이온즈',
+		'두산 베어스',
+		'SSG 랜더스',
+		'NC 다이노스',
+		'롯데 자이언츠',
+		'KT 위즈',
+		'키움 히어로즈',
+	];
+	const W9 = [1.1, 1.07, 1.05, 1.03, 1.0, 0.97, 0.95, 0.92, 0.9];
+	const HOME_ADV = 4 / 100;
+	const ERA_WEIGHT = 1;
+	const C_AWAY = 'oklch(0.50 0.13 40)';
+	const C_HOME = 'oklch(0.50 0.13 255)';
+
+	const num = (v: string, d: number) => {
+		const n = parseFloat(v);
+		return isFinite(n) ? n : d;
+	};
+	const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
+	const logit = (p: number) => Math.log(p / (1 - p));
+	const sig = (x: number) => 1 / (1 + Math.exp(-x));
+	const f3 = (x: number) => x.toFixed(3);
+
+	function wStat(values: string[], def: number, lo: number, hi: number) {
+		let sw = 0,
+			so = 0;
+		values.forEach((v, i) => {
+			const o = clamp(num(v, def), lo, hi);
+			so += o * W9[i];
+			sw += W9[i];
+		});
+		return sw > 0 ? so / sw : def;
+	}
+
+	let hasGameRes = false;
+	let gameDirty = false;
+
+	const dirtyNote = document.getElementById('dirty-note') as HTMLElement;
+	const resultSection = document.getElementById('result-section') as HTMLElement;
+
+	function updateDirtyNote() {
+		dirtyNote.style.display = hasGameRes && gameDirty ? '' : 'none';
+	}
+
+	function setDirty() {
+		gameDirty = true;
+		updateDirtyNote();
+	}
+
+	function readBatOps(side: string): string[] {
+		const inputs = document.querySelectorAll<HTMLInputElement>(
+			`input[data-side="${side}"][data-group="bat"][data-field="ops"]`
+		);
+		const arr: string[] = [];
+		inputs.forEach((el) => {
+			arr[Number(el.dataset.index)] = el.value;
+		});
+		return arr;
+	}
+
+	function updateLineupOps(side: string) {
+		const opsValues = readBatOps(side);
+		const val = wStat(opsValues, L.ops, 0.2, 1.5);
+		const label = document.getElementById(`ops-${side}`);
+		if (label) label.textContent = `OPS ${val.toFixed(3)}`;
+	}
+
+	// ---- wire up starting batter inputs ----
+	document.querySelectorAll<HTMLInputElement>('input[data-group="bat"]').forEach((input) => {
+		const field = input.dataset.field;
+		input.addEventListener('input', () => {
+			if (field === 'name') return; // cosmetic only, never dirty
+			setDirty();
+			if (field === 'ops') {
+				updateLineupOps(input.dataset.side as string);
+			}
+		});
+	});
+
+	// ---- bench inputs: captured but never dirty, never affect lineup OPS ----
+	document.querySelectorAll<HTMLInputElement>('input[data-group="bench"]').forEach((input) => {
+		// intentionally no dirty-flag / recompute wiring — bench stats are not read by computeGame()
+		input.addEventListener('input', () => {
+			/* no-op: bench edits are cosmetic-only w.r.t. calculation state */
+		});
+	});
+
+	// ---- pitcher inputs ----
+	document.querySelectorAll<HTMLInputElement>('input[data-group="arms"]').forEach((input) => {
+		const field = input.dataset.field;
+		input.addEventListener('input', () => {
+			if (field === 'name') return;
+			setDirty();
+		});
+	});
+
+	// ---- team selects ----
+	document.querySelectorAll<HTMLSelectElement>('select[data-field="team"]').forEach((select) => {
+		select.addEventListener('change', () => {
+			setDirty();
+		});
+	});
+
+	function readSide(side: string) {
+		const batRows: { avg: string; ops: string; sb: string }[] = [];
+		document
+			.querySelectorAll<HTMLInputElement>(`input[data-side="${side}"][data-group="bat"]`)
+			.forEach((el) => {
+				const i = Number(el.dataset.index);
+				const field = el.dataset.field as 'avg' | 'ops' | 'sb' | 'name';
+				if (field === 'name') return;
+				if (!batRows[i]) batRows[i] = { avg: '', ops: '', sb: '' };
+				batRows[i][field] = el.value;
+			});
+
+		const armRows: { era: string; whip: string; k9: string }[] = [];
+		document
+			.querySelectorAll<HTMLInputElement>(`input[data-side="${side}"][data-group="arms"]`)
+			.forEach((el) => {
+				const i = Number(el.dataset.index);
+				const field = el.dataset.field as 'era' | 'whip' | 'k9' | 'name';
+				if (field === 'name') return;
+				if (!armRows[i]) armRows[i] = { era: '', whip: '', k9: '' };
+				armRows[i][field] = el.value;
+			});
+
+		const teamSelect = document.querySelector<HTMLSelectElement>(
+			`select[data-side="${side}"][data-field="team"]`
+		);
+		const teamIdx = teamSelect ? Number(teamSelect.value) : 0;
+
+		const armAt = (i: number) => ({
+			era: clamp(num(armRows[i].era, L.era), 0.5, 12),
+			whip: clamp(num(armRows[i].whip, L.whip), 0.6, 2.5),
+			k9: clamp(num(armRows[i].k9, L.k9), 2, 15),
+		});
+		const sp = armAt(0);
+		const bp = { era: 0, whip: 0, k9: 0 };
+		for (let i = 1; i < 5; i++) {
+			const a = armAt(i);
+			bp.era += a.era / 4;
+			bp.whip += a.whip / 4;
+			bp.k9 += a.k9 / 4;
+		}
+		let sb = 0;
+		batRows.forEach((b) => {
+			sb += clamp(num(b.sb, 0), 0, 150);
+		});
+		const opsVals = batRows.map((b) => b.ops);
+		const avgVals = batRows.map((b) => b.avg);
+		return {
+			sp,
+			bp,
+			eraComb: 0.65 * sp.era + 0.35 * bp.era,
+			ops: wStat(opsVals, L.ops, 0.2, 1.5),
+			avg: wStat(avgVals, L.avg, 0.15, 0.45),
+			sb,
+			name: TEAMS[teamIdx] || TEAMS[0],
+		};
+	}
+
+	function computeGame() {
+		const homeAdv = HOME_ADV;
+		const eraW = ERA_WEIGHT;
+		const A = readSide('away');
+		const H = readSide('home');
+
+		const cSp =
+			((A.sp.era - H.sp.era) * 0.14 + (A.sp.whip - H.sp.whip) * 0.45 + (H.sp.k9 - A.sp.k9) * 0.025) * eraW;
+		const cBp =
+			((A.bp.era - H.bp.era) * 0.07 + (A.bp.whip - H.bp.whip) * 0.22 + (H.bp.k9 - A.bp.k9) * 0.012) * eraW;
+		const cBat = (H.ops - A.ops) * 2.8 + (H.avg - A.avg) * 0.9;
+		const cRun = clamp((H.sb - A.sb) * 0.002, -0.2, 0.2);
+		const cHome = logit(clamp(0.5 + homeAdv, 0.5, 0.6));
+		const pHome = sig(cSp + cBp + cBat + cRun + cHome);
+
+		const xr = (t: typeof A, o: typeof A, home: boolean) =>
+			clamp(L.rpg * Math.pow(t.ops / L.ops, 1.8) * Math.pow(o.eraComb / L.era, 0.9) * (home ? 1.04 : 1.0), 0.5, 15);
+		const xA = xr(A, H, false);
+		const xH = xr(H, A, true);
+		let sA = Math.round(xA);
+		let sH = Math.round(xH);
+		if (sA === sH) {
+			if (pHome >= 0.5) sH += 1;
+			else sA += 1;
+		}
+
+		return {
+			awayName: A.name,
+			homeName: H.name,
+			pHome,
+			sA,
+			sH,
+			factors: [
+				{
+					label: '선발 매치업',
+					detail:
+						'ERA ' +
+						A.sp.era.toFixed(2) +
+						'/' +
+						H.sp.era.toFixed(2) +
+						' · WHIP ' +
+						A.sp.whip.toFixed(2) +
+						'/' +
+						H.sp.whip.toFixed(2) +
+						' · K/9 ' +
+						A.sp.k9.toFixed(1) +
+						'/' +
+						H.sp.k9.toFixed(1),
+					c: cSp,
+				},
+				{
+					label: '불펜·마무리',
+					detail:
+						'ERA ' +
+						A.bp.era.toFixed(2) +
+						'/' +
+						H.bp.era.toFixed(2) +
+						' · WHIP ' +
+						A.bp.whip.toFixed(2) +
+						'/' +
+						H.bp.whip.toFixed(2),
+					c: cBp,
+				},
+				{
+					label: '라인업 타격',
+					detail: 'OPS ' + f3(A.ops) + '/' + f3(H.ops) + ' · AVG ' + f3(A.avg) + '/' + f3(H.avg),
+					c: cBat,
+				},
+				{ label: '주루', detail: '라인업 도루 ' + A.sb + '/' + H.sb, c: cRun },
+				{ label: '홈 어드밴티지', detail: '설정 +' + (homeAdv * 100).toFixed(1) + '%p', c: cHome },
+			],
+		};
+	}
+
+	function renderResult(G: ReturnType<typeof computeGame>) {
+		const awayPct = ((1 - G.pHome) * 100).toFixed(1);
+		const homePct = (G.pHome * 100).toFixed(1);
+
+		document.getElementById('away-name-text')!.textContent = G.awayName;
+		document.getElementById('home-name-text')!.textContent = G.homeName;
+		document.getElementById('away-pct')!.textContent = awayPct;
+		document.getElementById('home-pct')!.textContent = homePct;
+		(document.getElementById('prob-away-bar') as HTMLElement).style.width = `${awayPct}%`;
+		document.getElementById('away-score')!.textContent = String(G.sA);
+		document.getElementById('home-score')!.textContent = String(G.sH);
+
+		G.factors.forEach((f, i) => {
+			const pp = (sig(f.c) - 0.5) * 100;
+			const neutral = Math.abs(pp) < 0.05;
+			const impText = neutral ? '±0.0%p' : (pp > 0 ? '홈 +' : '원정 +') + Math.abs(pp).toFixed(1) + '%p';
+			const color = neutral ? '#8a919d' : pp > 0 ? C_HOME : C_AWAY;
+			const detailEl = document.getElementById(`factor-detail-${i}`)!;
+			const impEl = document.getElementById(`factor-imp-${i}`) as HTMLElement;
+			detailEl.textContent = f.detail;
+			impEl.textContent = impText;
+			impEl.style.color = color;
+		});
+
+		resultSection.style.display = 'block';
+	}
+
+	document.getElementById('calc-btn')!.addEventListener('click', () => {
+		const G = computeGame();
+		renderResult(G);
+		hasGameRes = true;
+		gameDirty = false;
+		updateDirtyNote();
+	});
+</script>
