@@ -1,4 +1,3 @@
-// ---- KBO win-probability calculator: shared constants, helpers, and sample data ----
 // Framework-agnostic plain TS -- importable from both the Astro frontmatter (build-time)
 // and the client <script> (browser, bundled by Vite). No DOM or Node-specific APIs.
 
@@ -26,7 +25,6 @@ export const ACCENT = {
 	home: 'oklch(0.50 0.13 255)',
 };
 
-// ---- fixed model constants (homeAdv=4, eraWeight=1, showBreakdown=true baked in) ----
 export const HOME_ADV = 4 / 100;
 export const ERA_WEIGHT = 1;
 

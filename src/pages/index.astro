@@ -513,7 +513,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		if (label) label.textContent = `OPS ${val.toFixed(3)}`;
 	}
 
-	// ---- wire up starting batter inputs ----
 	document.querySelectorAll<HTMLInputElement>('input[data-group="bat"]').forEach((input) => {
 		const field = input.dataset.field;
 		input.addEventListener('input', () => {
@@ -525,15 +524,11 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		});
 	});
 
-	// ---- bench inputs: captured but never dirty, never affect lineup OPS ----
 	document.querySelectorAll<HTMLInputElement>('input[data-group="bench"]').forEach((input) => {
 		// intentionally no dirty-flag / recompute wiring — bench stats are not read by computeGame()
-		input.addEventListener('input', () => {
-			/* no-op: bench edits are cosmetic-only w.r.t. calculation state */
-		});
+		input.addEventListener('input', () => {});
 	});
 
-	// ---- pitcher inputs ----
 	document.querySelectorAll<HTMLInputElement>('input[data-group="arms"]').forEach((input) => {
 		const field = input.dataset.field;
 		input.addEventListener('input', () => {
@@ -542,7 +537,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		});
 	});
 
-	// ---- team selects ----
 	document.querySelectorAll<HTMLSelectElement>('select[data-field="team"]').forEach((select) => {
 		select.addEventListener('change', () => {
 			setDirty();
