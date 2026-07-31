@@ -3,13 +3,12 @@
     "allow": [
       "Bash(npm run *)",
       "Bash(git add *)",
-      "Bash(git commit *)",
-      "Bash(npx astro check)",
-      "Bash(npx astro build)"
+      "Bash(git commit *)"
     ],
     "deny": [
       "Bash(git push *)",
-      "Bash(rm -rf *)"
+      "Bash(rm -rf *)",
+      "Bash(npx *)"
     ]
   },
   "language": "korean"
