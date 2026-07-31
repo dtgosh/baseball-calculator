@@ -122,7 +122,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 0 20px 48px 20px;
+		padding: 0 20px 16px 20px;
 		box-sizing: border-box;
 	}
 	.page-inner {
@@ -136,12 +136,12 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		align-items: flex-end;
 		justify-content: space-between;
 		gap: 16px;
-		padding: 32px 0 20px 0;
+		padding: 14px 0 10px 0;
 		border-bottom: 2px solid #1b1f27;
 	}
 	.title {
 		margin: 0;
-		font-size: clamp(22px, 3.4vw, 30px);
+		font-size: clamp(20px, 3vw, 28px);
 		font-weight: 700;
 		letter-spacing: -0.01em;
 	}
@@ -149,8 +149,8 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	.main {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 20px;
-		margin-top: 24px;
+		gap: 14px;
+		margin-top: 12px;
 	}
 
 	.card {
@@ -158,33 +158,33 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		background: #ffffff;
 		border: 1px solid #e2e5ea;
 		border-radius: 12px;
-		padding: 20px;
+		padding: 14px;
 		box-sizing: border-box;
 	}
 	.card-title {
-		margin: 0 0 14px 0;
-		font-size: 15px;
+		margin: 0 0 8px 0;
+		font-size: 14px;
 		font-weight: 700;
 	}
 
 	.roster-grid {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 14px;
+		gap: 10px;
 	}
 	.roster-side {
 		flex: 1 1 480px;
 		min-width: 0;
 		border: 1px solid #e8eaef;
 		border-radius: 10px;
-		padding: 14px;
+		padding: 10px;
 		box-sizing: border-box;
 	}
 	.roster-side-head {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		margin-bottom: 12px;
+		margin-bottom: 8px;
 	}
 	.chip {
 		font-size: 11px;
@@ -198,11 +198,11 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	.team-select {
 		flex: 1;
 		min-width: 0;
-		padding: 7px 8px;
+		padding: 6px 8px;
 		border: 1px solid #d4d8df;
 		border-radius: 7px;
 		background: #fbfbfc;
-		font-size: 13.5px;
+		font-size: 13px;
 		font-weight: 500;
 		color: #1b1f27;
 	}
@@ -216,15 +216,15 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	.col-header {
 		display: grid;
 		gap: 6px;
-		padding: 0 8px 4px 8px;
+		padding: 0 8px 3px 8px;
 		font-size: 10.5px;
 		color: #8a919d;
 		letter-spacing: 0.04em;
 	}
 	.arm-sep {
-		padding: 12px 8px 4px 8px;
+		padding: 6px 8px 3px 8px;
 		border-top: 1px solid #eceef1;
-		margin-top: 12px;
+		margin-top: 6px;
 	}
 	.bat-grid {
 		grid-template-columns: 28px 1fr 60px 64px 48px;
@@ -239,7 +239,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	.row-list {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: 3px;
 	}
 	.row {
 		display: grid;
@@ -249,7 +249,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	}
 	.row-no {
 		font-family: 'IBM Plex Mono', monospace;
-		font-size: 12px;
+		font-size: 11.5px;
 		color: #8a919d;
 	}
 	.row-role {
@@ -264,7 +264,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	.in {
 		width: 100%;
 		box-sizing: border-box;
-		padding: 5px 8px;
+		padding: 3px 7px;
 		border: 1px solid #e2e5ea;
 		border-radius: 6px;
 		background: #fbfbfc;
@@ -272,7 +272,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		color: #1b1f27;
 	}
 	.in-num {
-		padding: 5px 6px;
+		padding: 3px 6px;
 		font-family: 'IBM Plex Mono', monospace;
 		font-size: 12px;
 		text-align: right;
@@ -292,14 +292,14 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		align-items: center;
 		justify-content: center;
 		gap: 14px;
-		margin: 2px 0;
+		margin: 4px 0;
 	}
 	.calc-btn {
 		background: #1b1f27;
 		color: #ffffff;
 		border: none;
 		border-radius: 8px;
-		padding: 13px 32px;
+		padding: 11px 30px;
 		font-size: 14px;
 		font-weight: 600;
 		letter-spacing: 0.02em;
@@ -464,7 +464,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	}
 
 	.footer {
-		margin-top: 20px;
+		margin-top: 12px;
 		font-size: 11px;
 		color: #a3a9b3;
 	}
