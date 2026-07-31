@@ -27,13 +27,12 @@ interface Props {
 	roleLabel: string;
 	accent: string;
 	teamIdx: string;
-	lineupOps: string;
 	batters: Batter[];
 	arms: Arm[];
 	bench: Batter[];
 }
 
-const { side, roleLabel, accent, teamIdx, lineupOps, batters, arms, bench } = Astro.props;
+const { side, roleLabel, accent, teamIdx, batters, arms, bench } = Astro.props;
 
 // NOTE: the bare `data-astro-cid-lcdefpme` attribute repeated on every element below is NOT
 // hand-authored markup -- it replicates the scoped-style marker Astro's compiler stamps onto
@@ -80,9 +79,6 @@ const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
 				</option>
 			))}
 		</select>
-		<span class="ops-label" id={`ops-${side}`} data-astro-cid-lcdefpme>
-			OPS {lineupOps}
-		</span>
 	</div>
 
 	<div class="grid-scroll" data-astro-cid-lcdefpme>

@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import RosterCard from '../components/RosterCard.astro';
-import { L, ACCENT, initRoster, wStat, battingOps } from '../data/kbo';
+import { ACCENT, initRoster } from '../data/kbo';
 
 const roster = initRoster();
 const sel = { away: '1', home: '0' };
@@ -11,7 +11,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	roleLabel: side === 'away' ? '원정' : '홈',
 	accent: ACCENT[side],
 	teamIdx: sel[side],
-	lineupOps: wStat(roster[side].bat, (b) => battingOps(b, L.ops), L.ops, 0.2, 1.5).toFixed(3),
 	batters: roster[side].bat,
 	arms: roster[side].arms,
 	bench: roster[side].bench,
@@ -206,13 +205,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		font-weight: 500;
 		color: #1b1f27;
 	}
-	.ops-label {
-		font-size: 11.5px;
-		color: #8a919d;
-		font-family: 'IBM Plex Mono', monospace;
-		white-space: nowrap;
-	}
-
 	.col-header {
 		display: grid;
 		padding: 0 8px 3px 8px;
@@ -528,19 +520,11 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		return rows;
 	}
 
-	function updateLineupOps(side: string) {
-		const rows = readBatRaw(side);
-		const val = wStat(rows, (b) => battingOps(b, L.ops), L.ops, 0.2, 1.5);
-		const label = document.getElementById(`ops-${side}`);
-		if (label) label.textContent = `OPS ${val.toFixed(3)}`;
-	}
-
 	document.querySelectorAll<HTMLInputElement>('input[data-group="bat"]').forEach((input) => {
 		const field = input.dataset.field;
 		input.addEventListener('input', () => {
 			if (field === 'name') return; // cosmetic only, never dirty
 			setDirty();
-			updateLineupOps(input.dataset.side as string);
 		});
 	});
 
