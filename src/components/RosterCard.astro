@@ -12,6 +12,7 @@ interface Batter {
 	bb: string;
 	hbp: string;
 	sf: string;
+	sh: string;
 	sb: string;
 	cs: string;
 	k: string;
@@ -61,6 +62,7 @@ const BAT_FIELDS: { field: keyof Batter; label: string; step: string }[] = [
 	{ field: 'bb', label: '볼넷', step: '1' },
 	{ field: 'hbp', label: '사구', step: '1' },
 	{ field: 'sf', label: '희플', step: '1' },
+	{ field: 'sh', label: '희번', step: '1' },
 	{ field: 'sb', label: '도루', step: '1' },
 	{ field: 'cs', label: '도루실패', step: '1' },
 	{ field: 'k', label: '삼진', step: '1' },
