@@ -1,5 +1,5 @@
 ---
-import { TEAMS, ROLES } from '../data/kbo';
+import { TEAMS, ROLES, POSITIONS } from '../data/kbo';
 
 interface Batter {
 	name: string;
@@ -15,6 +15,7 @@ interface Batter {
 	sb: string;
 	cs: string;
 	k: string;
+	pos: string;
 }
 interface Arm {
 	name: string;
@@ -93,6 +94,7 @@ const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
 		<div class="col-header bat-grid" data-astro-cid-lcdefpme>
 			<span data-astro-cid-lcdefpme>타순</span>
 			<span data-astro-cid-lcdefpme>선수</span>
+			<span data-astro-cid-lcdefpme>포지션</span>
 			{BAT_FIELDS.map((f) => (
 				<span class="ta-right" data-astro-cid-lcdefpme>{f.label}</span>
 			))}
@@ -111,6 +113,20 @@ const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
 						data-field="name"
 						data-astro-cid-lcdefpme
 					/>
+					<select
+						class="in pos-select"
+						data-side={side}
+						data-group="bat"
+						data-index={i}
+						data-field="pos"
+						data-astro-cid-lcdefpme
+					>
+						{POSITIONS.map((p) => (
+							<option value={p} selected={p === b.pos} data-astro-cid-lcdefpme>
+								{p}
+							</option>
+						))}
+					</select>
 					{BAT_FIELDS.map((f) => (
 						<input
 							type="number"
@@ -175,6 +191,7 @@ const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
 		<div class="col-header bat-grid arm-sep" data-astro-cid-lcdefpme>
 			<span data-astro-cid-lcdefpme>후보</span>
 			<span data-astro-cid-lcdefpme>선수</span>
+			<span data-astro-cid-lcdefpme>포지션</span>
 			{BAT_FIELDS.map((f) => (
 				<span class="ta-right" data-astro-cid-lcdefpme>{f.label}</span>
 			))}
@@ -193,6 +210,20 @@ const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
 						data-field="name"
 						data-astro-cid-lcdefpme
 					/>
+					<select
+						class="in pos-select bench-in"
+						data-side={side}
+						data-group="bench"
+						data-index={i}
+						data-field="pos"
+						data-astro-cid-lcdefpme
+					>
+						{POSITIONS.map((p) => (
+							<option value={p} selected={p === b.pos} data-astro-cid-lcdefpme>
+								{p}
+							</option>
+						))}
+					</select>
 					{BAT_FIELDS.map((f) => (
 						<input
 							type="number"

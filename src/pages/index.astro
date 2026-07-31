@@ -221,9 +221,9 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		overflow-x: auto;
 	}
 	.bat-grid {
-		grid-template-columns: 22px minmax(74px, 1fr) repeat(12, 36px);
+		grid-template-columns: 22px minmax(74px, 1fr) 52px repeat(12, 36px);
 		gap: 4px;
-		min-width: 598px;
+		min-width: 654px;
 	}
 	.arm-grid {
 		grid-template-columns: 38px minmax(74px, 1fr) repeat(6, 40px);
@@ -273,6 +273,10 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		font-family: 'IBM Plex Mono', monospace;
 		font-size: 12px;
 		text-align: right;
+	}
+	.pos-select {
+		padding: 3px 4px;
+		font-size: 10.5px;
 	}
 	.in:focus {
 		border-color: oklch(0.5 0.13 255);
@@ -509,7 +513,9 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	function readBatRaw(side: string): { [k: string]: string }[] {
 		const rows: { [k: string]: string }[] = [];
 		document
-			.querySelectorAll<HTMLInputElement>(`input[data-side="${side}"][data-group="bat"]`)
+			.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+				`input[data-side="${side}"][data-group="bat"], select[data-side="${side}"][data-group="bat"]`
+			)
 			.forEach((el) => {
 				const i = Number(el.dataset.index);
 				const field = el.dataset.field as string;
@@ -520,18 +526,24 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		return rows;
 	}
 
-	document.querySelectorAll<HTMLInputElement>('input[data-group="bat"]').forEach((input) => {
-		const field = input.dataset.field;
-		input.addEventListener('input', () => {
-			if (field === 'name') return; // cosmetic only, never dirty
-			setDirty();
+	document
+		.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[data-group="bat"], select[data-group="bat"]')
+		.forEach((input) => {
+			const field = input.dataset.field;
+			const evt = input.tagName === 'SELECT' ? 'change' : 'input';
+			input.addEventListener(evt, () => {
+				if (field === 'name') return; // cosmetic only, never dirty
+				setDirty();
+			});
 		});
-	});
 
-	document.querySelectorAll<HTMLInputElement>('input[data-group="bench"]').forEach((input) => {
-		// intentionally no dirty-flag / recompute wiring — bench stats are not read by computeGame()
-		input.addEventListener('input', () => {});
-	});
+	document
+		.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[data-group="bench"], select[data-group="bench"]')
+		.forEach((input) => {
+			// intentionally no dirty-flag / recompute wiring — bench stats are not read by computeGame()
+			const evt = input.tagName === 'SELECT' ? 'change' : 'input';
+			input.addEventListener(evt, () => {});
+		});
 
 	document.querySelectorAll<HTMLInputElement>('input[data-group="arms"]').forEach((input) => {
 		const field = input.dataset.field;
