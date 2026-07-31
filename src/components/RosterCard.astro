@@ -3,6 +3,7 @@ import { TEAMS, ROLES } from '../data/kbo';
 
 interface Batter {
 	name: string;
+	g: string;
 	pa: string;
 	h: string;
 	d2: string;
@@ -13,9 +14,11 @@ interface Batter {
 	sf: string;
 	sb: string;
 	cs: string;
+	k: string;
 }
 interface Arm {
 	name: string;
+	g: string;
 	ip: string;
 	h: string;
 	bb: string;
@@ -28,13 +31,12 @@ interface Props {
 	roleLabel: string;
 	accent: string;
 	teamIdx: string;
-	games: string;
 	batters: Batter[];
 	arms: Arm[];
 	bench: Batter[];
 }
 
-const { side, roleLabel, accent, teamIdx, games, batters, arms, bench } = Astro.props;
+const { side, roleLabel, accent, teamIdx, batters, arms, bench } = Astro.props;
 
 // NOTE: the bare `data-astro-cid-lcdefpme` attribute repeated on every element below is NOT
 // hand-authored markup -- it replicates the scoped-style marker Astro's compiler stamps onto
@@ -49,6 +51,7 @@ const { side, roleLabel, accent, teamIdx, games, batters, arms, bench } = Astro.
 // changes, this hardcoded value must be re-derived from a fresh build.
 
 const BAT_FIELDS: { field: keyof Batter; label: string; step: string }[] = [
+	{ field: 'g', label: '경기수', step: '1' },
 	{ field: 'pa', label: '타석', step: '1' },
 	{ field: 'h', label: '안타', step: '1' },
 	{ field: 'd2', label: '2루타', step: '1' },
@@ -59,9 +62,11 @@ const BAT_FIELDS: { field: keyof Batter; label: string; step: string }[] = [
 	{ field: 'sf', label: '희플', step: '1' },
 	{ field: 'sb', label: '도루', step: '1' },
 	{ field: 'cs', label: '도루실패', step: '1' },
+	{ field: 'k', label: '삼진', step: '1' },
 ];
 
 const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
+	{ field: 'g', label: '경기수', step: '1' },
 	{ field: 'ip', label: '이닝', step: '0.1' },
 	{ field: 'h', label: '피안타', step: '1' },
 	{ field: 'bb', label: '볼넷', step: '1' },
@@ -82,19 +87,6 @@ const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
 				</option>
 			))}
 		</select>
-		<label class="games-label" data-astro-cid-lcdefpme>
-			경기수
-			<input
-				type="number"
-				step="1"
-				min="0"
-				class="in in-num games-input"
-				value={games}
-				data-side={side}
-				data-field="games"
-				data-astro-cid-lcdefpme
-			/>
-		</label>
 	</div>
 
 	<div class="grid-scroll" data-astro-cid-lcdefpme>

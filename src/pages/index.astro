@@ -11,7 +11,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	roleLabel: side === 'away' ? '원정' : '홈',
 	accent: ACCENT[side],
 	teamIdx: sel[side],
-	games: roster[side].games,
 	batters: roster[side].bat,
 	arms: roster[side].arms,
 	bench: roster[side].bench,
@@ -206,18 +205,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		font-weight: 500;
 		color: #1b1f27;
 	}
-	.games-label {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		flex-shrink: 0;
-		font-size: 11px;
-		color: #8a919d;
-		white-space: nowrap;
-	}
-	.games-input {
-		width: 52px;
-	}
 	.col-header {
 		display: grid;
 		padding: 0 8px 3px 8px;
@@ -234,14 +221,14 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		overflow-x: auto;
 	}
 	.bat-grid {
-		grid-template-columns: 22px minmax(74px, 1fr) repeat(9, 36px);
+		grid-template-columns: 22px minmax(74px, 1fr) repeat(12, 36px);
 		gap: 4px;
-		min-width: 478px;
+		min-width: 598px;
 	}
 	.arm-grid {
-		grid-template-columns: 38px minmax(74px, 1fr) repeat(5, 40px);
+		grid-template-columns: 38px minmax(74px, 1fr) repeat(6, 40px);
 		gap: 4px;
-		min-width: 378px;
+		min-width: 422px;
 	}
 	.ta-right {
 		text-align: right;
