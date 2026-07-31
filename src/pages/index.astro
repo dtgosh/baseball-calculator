@@ -580,8 +580,10 @@ const sides = (['away', 'home'] as const).map((side) => ({
 			bp.k9 += a.k9 / 4;
 		}
 		let sb = 0;
+		let cs = 0;
 		batRows.forEach((b) => {
 			sb += clamp(num(b.sb, 0), 0, 150);
+			cs += clamp(num(b.cs, 0), 0, 150);
 		});
 		return {
 			sp,
@@ -590,6 +592,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 			ops: wStat(batRows, (b) => battingOps(b, L.ops), L.ops, 0.2, 1.5),
 			avg: wStat(batRows, (b) => battingAvg(b, L.avg), L.avg, 0.15, 0.45),
 			sb,
+			cs,
 			name: TEAMS[teamIdx] || TEAMS[0],
 		};
 	}
@@ -605,7 +608,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		const cBp =
 			((A.bp.era - H.bp.era) * 0.07 + (A.bp.whip - H.bp.whip) * 0.22 + (H.bp.k9 - A.bp.k9) * 0.012) * eraW;
 		const cBat = (H.ops - A.ops) * 2.8 + (H.avg - A.avg) * 0.9;
-		const cRun = clamp((H.sb - A.sb) * 0.002, -0.2, 0.2);
+		const cRun = clamp((H.sb - H.cs - (A.sb - A.cs)) * 0.002, -0.2, 0.2);
 		const cHome = logit(clamp(0.5 + homeAdv, 0.5, 0.6));
 		const pHome = sig(cSp + cBp + cBat + cRun + cHome);
 
@@ -662,7 +665,11 @@ const sides = (['away', 'home'] as const).map((side) => ({
 					detail: 'OPS ' + f3(A.ops) + '/' + f3(H.ops) + ' · AVG ' + f3(A.avg) + '/' + f3(H.avg),
 					c: cBat,
 				},
-				{ label: '주루', detail: '라인업 도루 ' + A.sb + '/' + H.sb, c: cRun },
+				{
+				label: '주루',
+				detail: '라인업 도루(실패) ' + A.sb + '(' + A.cs + ')/' + H.sb + '(' + H.cs + ')',
+				c: cRun,
+			},
 				{ label: '홈 어드밴티지', detail: '설정 +' + (homeAdv * 100).toFixed(1) + '%p', c: cHome },
 			],
 		};

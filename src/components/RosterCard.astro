@@ -12,6 +12,7 @@ interface Batter {
 	hbp: string;
 	sf: string;
 	sb: string;
+	cs: string;
 }
 interface Arm {
 	name: string;
@@ -56,6 +57,7 @@ const BAT_FIELDS: { field: keyof Batter; label: string; step: string }[] = [
 	{ field: 'hbp', label: '사구', step: '1' },
 	{ field: 'sf', label: '희플', step: '1' },
 	{ field: 'sb', label: '도루', step: '1' },
+	{ field: 'cs', label: '도루실패', step: '1' },
 ];
 
 const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
