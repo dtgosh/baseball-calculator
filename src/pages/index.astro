@@ -1,106 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
-
-// ---- constants (mirrored exactly in the client <script> for the live calculator) ----
-const L = { rpg: 5.15, ops: 0.735, avg: 0.265, era: 4.6, whip: 1.32, k9: 7.4, der: 0.69, sr: 70 };
-const TEAMS = [
-	'LG 트윈스',
-	'한화 이글스',
-	'KIA 타이거즈',
-	'삼성 라이온즈',
-	'두산 베어스',
-	'SSG 랜더스',
-	'NC 다이노스',
-	'롯데 자이언츠',
-	'KT 위즈',
-	'키움 히어로즈',
-];
-const W9 = [1.1, 1.07, 1.05, 1.03, 1.0, 0.97, 0.95, 0.92, 0.9];
-
-const bat = (rows: [string, string, string, string][]) =>
-	rows.map((r) => ({ name: r[0], avg: r[1], ops: r[2], sb: r[3] }));
-const arm = (rows: [string, string, string, string][]) =>
-	rows.map((r) => ({ name: r[0], era: r[1], whip: r[2], k9: r[3] }));
-
-const initRoster = () => ({
-	away: {
-		bat: bat([
-			['김지환', '0.302', '0.842', '21'],
-			['박세진', '0.288', '0.815', '14'],
-			['이현우', '0.295', '0.878', '8'],
-			['최민준', '0.310', '0.901', '5'],
-			['정재윤', '0.276', '0.796', '11'],
-			['오승민', '0.265', '0.744', '6'],
-			['한도윤', '0.258', '0.712', '9'],
-			['임규현', '0.249', '0.688', '4'],
-			['송지호', '0.241', '0.655', '12'],
-		]),
-		arms: arm([
-			['문세혁', '3.42', '1.18', '8.9'],
-			['정해일', '3.85', '1.28', '8.2'],
-			['구자혁', '4.10', '1.31', '7.6'],
-			['민동엽', '4.32', '1.36', '7.2'],
-			['채상윤', '2.88', '1.09', '9.8'],
-		]),
-		bench: bat([
-			['강태민', '0.262', '0.712', '3'],
-			['유정호', '0.255', '0.688', '5'],
-			['신재웅', '0.248', '0.665', '2'],
-			['곽민서', '0.240', '0.641', '6'],
-		]),
-	},
-	home: {
-		bat: bat([
-			['이강준', '0.294', '0.822', '17'],
-			['김태오', '0.285', '0.801', '12'],
-			['박준서', '0.301', '0.865', '6'],
-			['최우진', '0.307', '0.884', '4'],
-			['장하람', '0.272', '0.780', '9'],
-			['윤세찬', '0.263', '0.735', '7'],
-			['강민재', '0.256', '0.702', '5'],
-			['조현탁', '0.247', '0.671', '3'],
-			['백승우', '0.243', '0.658', '8'],
-		]),
-		arms: arm([
-			['배성준', '3.78', '1.24', '8.1'],
-			['홍기표', '3.92', '1.26', '8.4'],
-			['전성규', '4.18', '1.33', '7.4'],
-			['양지훈', '4.40', '1.38', '6.9'],
-			['국영호', '3.05', '1.12', '9.3'],
-		]),
-		bench: bat([
-			['남기훈', '0.259', '0.705', '2'],
-			['도상원', '0.252', '0.682', '4'],
-			['문진우', '0.246', '0.659', '1'],
-			['서병규', '0.238', '0.635', '3'],
-		]),
-	},
-});
+import RosterCard from '../components/RosterCard.astro';
+import { L, ACCENT, initRoster, wStat } from '../data/kbo';
 
 const roster = initRoster();
 const sel = { away: '1', home: '0' };
-const roles = ['선발', '중계1', '중계2', '중계3', '마무리'];
-
-const num = (v: string, d: number) => {
-	const n = parseFloat(v);
-	return isFinite(n) ? n : d;
-};
-const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
-const wStat = (list: { [k: string]: string }[], key: string, def: number, lo: number, hi: number) => {
-	let sw = 0,
-		so = 0;
-	list.forEach((b, i) => {
-		const o = clamp(num(b[key], def), lo, hi);
-		so += o * W9[i];
-		sw += W9[i];
-	});
-	return sw > 0 ? so / sw : def;
-};
 
 const sides = (['away', 'home'] as const).map((side) => ({
 	side,
 	roleLabel: side === 'away' ? '원정' : '홈',
-	accent: side === 'away' ? 'oklch(0.50 0.13 40)' : 'oklch(0.50 0.13 255)',
+	accent: ACCENT[side],
 	teamIdx: sel[side],
 	lineupOps: wStat(roster[side].bat, 'ops', L.ops, 0.2, 1.5).toFixed(3),
 	batters: roster[side].bat,
@@ -120,198 +29,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 				<section class="card">
 					<h2 class="card-title">라인업 입력</h2>
 					<div class="roster-grid">
-						{
-							sides.map((r) => (
-								<div class="roster-side">
-									<div class="roster-side-head">
-										<span class="chip" style={`background: ${r.accent};`}>
-											{r.roleLabel}
-										</span>
-										<select class="team-select" data-side={r.side} data-field="team">
-											{TEAMS.map((name, i) => (
-												<option value={String(i)} selected={String(i) === r.teamIdx}>
-													{name}
-												</option>
-											))}
-										</select>
-										<span class="ops-label" id={`ops-${r.side}`}>
-											OPS {r.lineupOps}
-										</span>
-									</div>
-
-									<div class="col-header bat-grid">
-										<span>타순</span>
-										<span>선수</span>
-										<span class="ta-right">AVG</span>
-										<span class="ta-right">OPS</span>
-										<span class="ta-right">도루</span>
-									</div>
-									<div class="row-list">
-										{r.batters.map((b, i) => (
-											<div class="row bat-grid">
-												<span class="row-no">{i + 1}</span>
-												<input
-													type="text"
-													class="in in-name"
-													value={b.name}
-													data-side={r.side}
-													data-group="bat"
-													data-index={i}
-													data-field="name"
-												/>
-												<input
-													type="number"
-													step="0.001"
-													min="0"
-													class="in in-num"
-													value={b.avg}
-													data-side={r.side}
-													data-group="bat"
-													data-index={i}
-													data-field="avg"
-												/>
-												<input
-													type="number"
-													step="0.001"
-													min="0"
-													class="in in-num"
-													value={b.ops}
-													data-side={r.side}
-													data-group="bat"
-													data-index={i}
-													data-field="ops"
-												/>
-												<input
-													type="number"
-													step="1"
-													min="0"
-													class="in in-num"
-													value={b.sb}
-													data-side={r.side}
-													data-group="bat"
-													data-index={i}
-													data-field="sb"
-												/>
-											</div>
-										))}
-									</div>
-
-									<div class="col-header arm-grid arm-sep">
-										<span>마운드</span>
-										<span>투수</span>
-										<span class="ta-right">ERA</span>
-										<span class="ta-right">WHIP</span>
-										<span class="ta-right">K/9</span>
-									</div>
-									<div class="row-list">
-										{r.arms.map((p, i) => (
-											<div class="row arm-grid">
-												<span class="row-role">{roles[i]}</span>
-												<input
-													type="text"
-													class="in in-name"
-													value={p.name}
-													data-side={r.side}
-													data-group="arms"
-													data-index={i}
-													data-field="name"
-												/>
-												<input
-													type="number"
-													step="0.01"
-													min="0"
-													class="in in-num"
-													value={p.era}
-													data-side={r.side}
-													data-group="arms"
-													data-index={i}
-													data-field="era"
-												/>
-												<input
-													type="number"
-													step="0.01"
-													min="0"
-													class="in in-num"
-													value={p.whip}
-													data-side={r.side}
-													data-group="arms"
-													data-index={i}
-													data-field="whip"
-												/>
-												<input
-													type="number"
-													step="0.1"
-													min="0"
-													class="in in-num"
-													value={p.k9}
-													data-side={r.side}
-													data-group="arms"
-													data-index={i}
-													data-field="k9"
-												/>
-											</div>
-										))}
-									</div>
-
-									<div class="col-header bat-grid arm-sep">
-										<span>후보</span>
-										<span>선수</span>
-										<span class="ta-right">AVG</span>
-										<span class="ta-right">OPS</span>
-										<span class="ta-right">도루</span>
-									</div>
-									<div class="row-list">
-										{r.bench.map((b, i) => (
-											<div class="row bat-grid">
-												<span class="row-no bench-no">{`B${i + 1}`}</span>
-												<input
-													type="text"
-													class="in in-name bench-in"
-													value={b.name}
-													data-side={r.side}
-													data-group="bench"
-													data-index={i}
-													data-field="name"
-												/>
-												<input
-													type="number"
-													step="0.001"
-													min="0"
-													class="in in-num bench-in"
-													value={b.avg}
-													data-side={r.side}
-													data-group="bench"
-													data-index={i}
-													data-field="avg"
-												/>
-												<input
-													type="number"
-													step="0.001"
-													min="0"
-													class="in in-num bench-in"
-													value={b.ops}
-													data-side={r.side}
-													data-group="bench"
-													data-index={i}
-													data-field="ops"
-												/>
-												<input
-													type="number"
-													step="1"
-													min="0"
-													class="in in-num bench-in"
-													value={b.sb}
-													data-side={r.side}
-													data-group="bench"
-													data-index={i}
-													data-field="sb"
-												/>
-											</div>
-										))}
-									</div>
-								</div>
-							))
-						}
+						{sides.map((r) => <RosterCard {...r} />)}
 					</div>
 				</section>
 
@@ -753,45 +471,14 @@ const sides = (['away', 'home'] as const).map((side) => ({
 </style>
 
 <script>
-	// ---- fixed model constants (homeAdv=4, eraWeight=1, showBreakdown=true baked in) ----
-	const L = { rpg: 5.15, ops: 0.735, avg: 0.265, era: 4.6, whip: 1.32, k9: 7.4, der: 0.69, sr: 70 };
-	const TEAMS = [
-		'LG 트윈스',
-		'한화 이글스',
-		'KIA 타이거즈',
-		'삼성 라이온즈',
-		'두산 베어스',
-		'SSG 랜더스',
-		'NC 다이노스',
-		'롯데 자이언츠',
-		'KT 위즈',
-		'키움 히어로즈',
-	];
-	const W9 = [1.1, 1.07, 1.05, 1.03, 1.0, 0.97, 0.95, 0.92, 0.9];
-	const HOME_ADV = 4 / 100;
-	const ERA_WEIGHT = 1;
-	const C_AWAY = 'oklch(0.50 0.13 40)';
-	const C_HOME = 'oklch(0.50 0.13 255)';
+	import { L, TEAMS, HOME_ADV, ERA_WEIGHT, ACCENT, num, clamp, wStat } from '../data/kbo';
 
-	const num = (v: string, d: number) => {
-		const n = parseFloat(v);
-		return isFinite(n) ? n : d;
-	};
-	const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
+	const C_AWAY = ACCENT.away;
+	const C_HOME = ACCENT.home;
+
 	const logit = (p: number) => Math.log(p / (1 - p));
 	const sig = (x: number) => 1 / (1 + Math.exp(-x));
 	const f3 = (x: number) => x.toFixed(3);
-
-	function wStat(values: string[], def: number, lo: number, hi: number) {
-		let sw = 0,
-			so = 0;
-		values.forEach((v, i) => {
-			const o = clamp(num(v, def), lo, hi);
-			so += o * W9[i];
-			sw += W9[i];
-		});
-		return sw > 0 ? so / sw : def;
-	}
 
 	let hasGameRes = false;
 	let gameDirty = false;
@@ -808,20 +495,20 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		updateDirtyNote();
 	}
 
-	function readBatOps(side: string): string[] {
+	function readBatOps(side: string): { ops: string }[] {
 		const inputs = document.querySelectorAll<HTMLInputElement>(
 			`input[data-side="${side}"][data-group="bat"][data-field="ops"]`
 		);
-		const arr: string[] = [];
+		const arr: { ops: string }[] = [];
 		inputs.forEach((el) => {
-			arr[Number(el.dataset.index)] = el.value;
+			arr[Number(el.dataset.index)] = { ops: el.value };
 		});
 		return arr;
 	}
 
 	function updateLineupOps(side: string) {
-		const opsValues = readBatOps(side);
-		const val = wStat(opsValues, L.ops, 0.2, 1.5);
+		const opsRows = readBatOps(side);
+		const val = wStat(opsRows, 'ops', L.ops, 0.2, 1.5);
 		const label = document.getElementById(`ops-${side}`);
 		if (label) label.textContent = `OPS ${val.toFixed(3)}`;
 	}
@@ -907,14 +594,12 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		batRows.forEach((b) => {
 			sb += clamp(num(b.sb, 0), 0, 150);
 		});
-		const opsVals = batRows.map((b) => b.ops);
-		const avgVals = batRows.map((b) => b.avg);
 		return {
 			sp,
 			bp,
 			eraComb: 0.65 * sp.era + 0.35 * bp.era,
-			ops: wStat(opsVals, L.ops, 0.2, 1.5),
-			avg: wStat(avgVals, L.avg, 0.15, 0.45),
+			ops: wStat(batRows, 'ops', L.ops, 0.2, 1.5),
+			avg: wStat(batRows, 'avg', L.avg, 0.15, 0.45),
 			sb,
 			name: TEAMS[teamIdx] || TEAMS[0],
 		};

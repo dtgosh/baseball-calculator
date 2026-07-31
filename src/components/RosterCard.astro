@@ -1,0 +1,242 @@
+---
+import { TEAMS, ROLES } from '../data/kbo';
+
+interface Batter {
+	name: string;
+	avg: string;
+	ops: string;
+	sb: string;
+}
+interface Arm {
+	name: string;
+	era: string;
+	whip: string;
+	k9: string;
+}
+
+interface Props {
+	side: 'away' | 'home';
+	roleLabel: string;
+	accent: string;
+	teamIdx: string;
+	lineupOps: string;
+	batters: Batter[];
+	arms: Arm[];
+	bench: Batter[];
+}
+
+const { side, roleLabel, accent, teamIdx, lineupOps, batters, arms, bench } = Astro.props;
+
+// NOTE: the bare `data-astro-cid-lcdefpme` attribute repeated on every element below is NOT
+// hand-authored markup -- it replicates the scoped-style marker Astro's compiler stamps onto
+// every element of src/pages/index.astro (the only file with a <style> block, per this refactor's
+// requirement to leave that block untouched). Because this markup used to live directly in
+// index.astro, Astro's own compiler produced that attribute automatically; now that the markup
+// lives in this separate component (which intentionally has no <style> tag of its own), Astro no
+// longer adds it, so the CSS in index.astro's `[data-astro-cid-lcdefpme]`-scoped selectors would
+// silently stop matching these elements. It is reproduced literally here only to keep this
+// component's rendered output (and therefore the page's visual styling) identical to before the
+// refactor. If index.astro's <style> block is ever moved/removed or Astro's scoping scheme
+// changes, this hardcoded value must be re-derived from a fresh build.
+---
+
+<div class="roster-side" data-astro-cid-lcdefpme>
+	<div class="roster-side-head" data-astro-cid-lcdefpme>
+		<span class="chip" style={`background: ${accent};`} data-astro-cid-lcdefpme>
+			{roleLabel}
+		</span>
+		<select class="team-select" data-side={side} data-field="team" data-astro-cid-lcdefpme>
+			{TEAMS.map((name, i) => (
+				<option value={String(i)} selected={String(i) === teamIdx} data-astro-cid-lcdefpme>
+					{name}
+				</option>
+			))}
+		</select>
+		<span class="ops-label" id={`ops-${side}`} data-astro-cid-lcdefpme>
+			OPS {lineupOps}
+		</span>
+	</div>
+
+	<div class="col-header bat-grid" data-astro-cid-lcdefpme>
+		<span data-astro-cid-lcdefpme>타순</span>
+		<span data-astro-cid-lcdefpme>선수</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>AVG</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>OPS</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>도루</span>
+	</div>
+	<div class="row-list" data-astro-cid-lcdefpme>
+		{batters.map((b, i) => (
+			<div class="row bat-grid" data-astro-cid-lcdefpme>
+				<span class="row-no" data-astro-cid-lcdefpme>{i + 1}</span>
+				<input
+					type="text"
+					class="in in-name"
+					value={b.name}
+					data-side={side}
+					data-group="bat"
+					data-index={i}
+					data-field="name"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="0.001"
+					min="0"
+					class="in in-num"
+					value={b.avg}
+					data-side={side}
+					data-group="bat"
+					data-index={i}
+					data-field="avg"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="0.001"
+					min="0"
+					class="in in-num"
+					value={b.ops}
+					data-side={side}
+					data-group="bat"
+					data-index={i}
+					data-field="ops"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="1"
+					min="0"
+					class="in in-num"
+					value={b.sb}
+					data-side={side}
+					data-group="bat"
+					data-index={i}
+					data-field="sb"
+					data-astro-cid-lcdefpme
+				/>
+			</div>
+		))}
+	</div>
+
+	<div class="col-header arm-grid arm-sep" data-astro-cid-lcdefpme>
+		<span data-astro-cid-lcdefpme>마운드</span>
+		<span data-astro-cid-lcdefpme>투수</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>ERA</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>WHIP</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>K/9</span>
+	</div>
+	<div class="row-list" data-astro-cid-lcdefpme>
+		{arms.map((p, i) => (
+			<div class="row arm-grid" data-astro-cid-lcdefpme>
+				<span class="row-role" data-astro-cid-lcdefpme>{ROLES[i]}</span>
+				<input
+					type="text"
+					class="in in-name"
+					value={p.name}
+					data-side={side}
+					data-group="arms"
+					data-index={i}
+					data-field="name"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="0.01"
+					min="0"
+					class="in in-num"
+					value={p.era}
+					data-side={side}
+					data-group="arms"
+					data-index={i}
+					data-field="era"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="0.01"
+					min="0"
+					class="in in-num"
+					value={p.whip}
+					data-side={side}
+					data-group="arms"
+					data-index={i}
+					data-field="whip"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="0.1"
+					min="0"
+					class="in in-num"
+					value={p.k9}
+					data-side={side}
+					data-group="arms"
+					data-index={i}
+					data-field="k9"
+					data-astro-cid-lcdefpme
+				/>
+			</div>
+		))}
+	</div>
+
+	<div class="col-header bat-grid arm-sep" data-astro-cid-lcdefpme>
+		<span data-astro-cid-lcdefpme>후보</span>
+		<span data-astro-cid-lcdefpme>선수</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>AVG</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>OPS</span>
+		<span class="ta-right" data-astro-cid-lcdefpme>도루</span>
+	</div>
+	<div class="row-list" data-astro-cid-lcdefpme>
+		{bench.map((b, i) => (
+			<div class="row bat-grid" data-astro-cid-lcdefpme>
+				<span class="row-no bench-no" data-astro-cid-lcdefpme>{`B${i + 1}`}</span>
+				<input
+					type="text"
+					class="in in-name bench-in"
+					value={b.name}
+					data-side={side}
+					data-group="bench"
+					data-index={i}
+					data-field="name"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="0.001"
+					min="0"
+					class="in in-num bench-in"
+					value={b.avg}
+					data-side={side}
+					data-group="bench"
+					data-index={i}
+					data-field="avg"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="0.001"
+					min="0"
+					class="in in-num bench-in"
+					value={b.ops}
+					data-side={side}
+					data-group="bench"
+					data-index={i}
+					data-field="ops"
+					data-astro-cid-lcdefpme
+				/>
+				<input
+					type="number"
+					step="1"
+					min="0"
+					class="in in-num bench-in"
+					value={b.sb}
+					data-side={side}
+					data-group="bench"
+					data-index={i}
+					data-field="sb"
+					data-astro-cid-lcdefpme
+				/>
+			</div>
+		))}
+	</div>
+</div>
