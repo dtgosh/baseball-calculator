@@ -93,7 +93,48 @@ const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
 	</div>
 
 	<div class="grid-scroll" data-astro-cid-lcdefpme>
-		<div class="col-header bat-grid" data-astro-cid-lcdefpme>
+		<div class="col-header arm-grid" data-astro-cid-lcdefpme>
+			<span data-astro-cid-lcdefpme>선발</span>
+			<span data-astro-cid-lcdefpme>투수</span>
+			{ARM_FIELDS.map((f) => (
+				<span class="ta-right" data-astro-cid-lcdefpme>{f.label}</span>
+			))}
+		</div>
+		<div class="row-list" data-astro-cid-lcdefpme>
+			{arms.slice(0, 1).map((p, i) => (
+				<div class="row arm-grid" data-astro-cid-lcdefpme>
+					<span class="row-role" data-astro-cid-lcdefpme>{ROLES[i]}</span>
+					<input
+						type="text"
+						class="in in-name"
+						value={p.name}
+						data-side={side}
+						data-group="arms"
+						data-index={i}
+						data-field="name"
+						data-astro-cid-lcdefpme
+					/>
+					{ARM_FIELDS.map((f) => (
+						<input
+							type="number"
+							step={f.step}
+							min="0"
+							class="in in-num"
+							value={p[f.field]}
+							data-side={side}
+							data-group="arms"
+							data-index={i}
+							data-field={f.field}
+							data-astro-cid-lcdefpme
+						/>
+					))}
+				</div>
+			))}
+		</div>
+	</div>
+
+	<div class="grid-scroll" data-astro-cid-lcdefpme>
+		<div class="col-header bat-grid arm-sep" data-astro-cid-lcdefpme>
 			<span data-astro-cid-lcdefpme>타순</span>
 			<span data-astro-cid-lcdefpme>선수</span>
 			<span data-astro-cid-lcdefpme>포지션</span>
@@ -150,42 +191,45 @@ const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
 
 	<div class="grid-scroll" data-astro-cid-lcdefpme>
 		<div class="col-header arm-grid arm-sep" data-astro-cid-lcdefpme>
-			<span data-astro-cid-lcdefpme>마운드</span>
+			<span data-astro-cid-lcdefpme>불펜</span>
 			<span data-astro-cid-lcdefpme>투수</span>
 			{ARM_FIELDS.map((f) => (
 				<span class="ta-right" data-astro-cid-lcdefpme>{f.label}</span>
 			))}
 		</div>
 		<div class="row-list" data-astro-cid-lcdefpme>
-			{arms.map((p, i) => (
-				<div class="row arm-grid" data-astro-cid-lcdefpme>
-					<span class="row-role" data-astro-cid-lcdefpme>{ROLES[i]}</span>
-					<input
-						type="text"
-						class="in in-name"
-						value={p.name}
-						data-side={side}
-						data-group="arms"
-						data-index={i}
-						data-field="name"
-						data-astro-cid-lcdefpme
-					/>
-					{ARM_FIELDS.map((f) => (
+			{arms.slice(1).map((p, offset) => {
+				const i = offset + 1;
+				return (
+					<div class="row arm-grid" data-astro-cid-lcdefpme>
+						<span class="row-role" data-astro-cid-lcdefpme>{ROLES[i]}</span>
 						<input
-							type="number"
-							step={f.step}
-							min="0"
-							class="in in-num"
-							value={p[f.field]}
+							type="text"
+							class="in in-name"
+							value={p.name}
 							data-side={side}
 							data-group="arms"
 							data-index={i}
-							data-field={f.field}
+							data-field="name"
 							data-astro-cid-lcdefpme
 						/>
-					))}
-				</div>
-			))}
+						{ARM_FIELDS.map((f) => (
+							<input
+								type="number"
+								step={f.step}
+								min="0"
+								class="in in-num"
+								value={p[f.field]}
+								data-side={side}
+								data-group="arms"
+								data-index={i}
+								data-field={f.field}
+								data-astro-cid-lcdefpme
+							/>
+						))}
+					</div>
+				);
+			})}
 		</div>
 	</div>
 
