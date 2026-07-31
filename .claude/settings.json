@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm run *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(npx astro check)",
+      "Bash(npx astro build)"
     ],
     "deny": [
       "Bash(git push *)",
