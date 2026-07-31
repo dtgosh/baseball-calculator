@@ -3,15 +3,23 @@ import { TEAMS, ROLES } from '../data/kbo';
 
 interface Batter {
 	name: string;
-	avg: string;
-	ops: string;
+	pa: string;
+	h: string;
+	d2: string;
+	d3: string;
+	hr: string;
+	bb: string;
+	hbp: string;
+	sf: string;
 	sb: string;
 }
 interface Arm {
 	name: string;
-	era: string;
-	whip: string;
-	k9: string;
+	ip: string;
+	h: string;
+	bb: string;
+	er: string;
+	k: string;
 }
 
 interface Props {
@@ -38,6 +46,26 @@ const { side, roleLabel, accent, teamIdx, lineupOps, batters, arms, bench } = As
 // component's rendered output (and therefore the page's visual styling) identical to before the
 // refactor. If index.astro's <style> block is ever moved/removed or Astro's scoping scheme
 // changes, this hardcoded value must be re-derived from a fresh build.
+
+const BAT_FIELDS: { field: keyof Batter; label: string; step: string }[] = [
+	{ field: 'pa', label: '타석', step: '1' },
+	{ field: 'h', label: '안타', step: '1' },
+	{ field: 'd2', label: '2루타', step: '1' },
+	{ field: 'd3', label: '3루타', step: '1' },
+	{ field: 'hr', label: '홈런', step: '1' },
+	{ field: 'bb', label: '볼넷', step: '1' },
+	{ field: 'hbp', label: '사구', step: '1' },
+	{ field: 'sf', label: '희플', step: '1' },
+	{ field: 'sb', label: '도루', step: '1' },
+];
+
+const ARM_FIELDS: { field: keyof Arm; label: string; step: string }[] = [
+	{ field: 'ip', label: '이닝', step: '0.1' },
+	{ field: 'h', label: '피안타', step: '1' },
+	{ field: 'bb', label: '볼넷', step: '1' },
+	{ field: 'er', label: '자책', step: '1' },
+	{ field: 'k', label: '탈삼진', step: '1' },
+];
 ---
 
 <div class="roster-side" data-astro-cid-lcdefpme>
@@ -57,186 +85,126 @@ const { side, roleLabel, accent, teamIdx, lineupOps, batters, arms, bench } = As
 		</span>
 	</div>
 
-	<div class="col-header bat-grid" data-astro-cid-lcdefpme>
-		<span data-astro-cid-lcdefpme>타순</span>
-		<span data-astro-cid-lcdefpme>선수</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>AVG</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>OPS</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>도루</span>
-	</div>
-	<div class="row-list" data-astro-cid-lcdefpme>
-		{batters.map((b, i) => (
-			<div class="row bat-grid" data-astro-cid-lcdefpme>
-				<span class="row-no" data-astro-cid-lcdefpme>{i + 1}</span>
-				<input
-					type="text"
-					class="in in-name"
-					value={b.name}
-					data-side={side}
-					data-group="bat"
-					data-index={i}
-					data-field="name"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="0.001"
-					min="0"
-					class="in in-num"
-					value={b.avg}
-					data-side={side}
-					data-group="bat"
-					data-index={i}
-					data-field="avg"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="0.001"
-					min="0"
-					class="in in-num"
-					value={b.ops}
-					data-side={side}
-					data-group="bat"
-					data-index={i}
-					data-field="ops"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="1"
-					min="0"
-					class="in in-num"
-					value={b.sb}
-					data-side={side}
-					data-group="bat"
-					data-index={i}
-					data-field="sb"
-					data-astro-cid-lcdefpme
-				/>
-			</div>
-		))}
+	<div class="grid-scroll" data-astro-cid-lcdefpme>
+		<div class="col-header bat-grid" data-astro-cid-lcdefpme>
+			<span data-astro-cid-lcdefpme>타순</span>
+			<span data-astro-cid-lcdefpme>선수</span>
+			{BAT_FIELDS.map((f) => (
+				<span class="ta-right" data-astro-cid-lcdefpme>{f.label}</span>
+			))}
+		</div>
+		<div class="row-list" data-astro-cid-lcdefpme>
+			{batters.map((b, i) => (
+				<div class="row bat-grid" data-astro-cid-lcdefpme>
+					<span class="row-no" data-astro-cid-lcdefpme>{i + 1}</span>
+					<input
+						type="text"
+						class="in in-name"
+						value={b.name}
+						data-side={side}
+						data-group="bat"
+						data-index={i}
+						data-field="name"
+						data-astro-cid-lcdefpme
+					/>
+					{BAT_FIELDS.map((f) => (
+						<input
+							type="number"
+							step={f.step}
+							min="0"
+							class="in in-num"
+							value={b[f.field]}
+							data-side={side}
+							data-group="bat"
+							data-index={i}
+							data-field={f.field}
+							data-astro-cid-lcdefpme
+						/>
+					))}
+				</div>
+			))}
+		</div>
 	</div>
 
-	<div class="col-header arm-grid arm-sep" data-astro-cid-lcdefpme>
-		<span data-astro-cid-lcdefpme>마운드</span>
-		<span data-astro-cid-lcdefpme>투수</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>ERA</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>WHIP</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>K/9</span>
-	</div>
-	<div class="row-list" data-astro-cid-lcdefpme>
-		{arms.map((p, i) => (
-			<div class="row arm-grid" data-astro-cid-lcdefpme>
-				<span class="row-role" data-astro-cid-lcdefpme>{ROLES[i]}</span>
-				<input
-					type="text"
-					class="in in-name"
-					value={p.name}
-					data-side={side}
-					data-group="arms"
-					data-index={i}
-					data-field="name"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="0.01"
-					min="0"
-					class="in in-num"
-					value={p.era}
-					data-side={side}
-					data-group="arms"
-					data-index={i}
-					data-field="era"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="0.01"
-					min="0"
-					class="in in-num"
-					value={p.whip}
-					data-side={side}
-					data-group="arms"
-					data-index={i}
-					data-field="whip"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="0.1"
-					min="0"
-					class="in in-num"
-					value={p.k9}
-					data-side={side}
-					data-group="arms"
-					data-index={i}
-					data-field="k9"
-					data-astro-cid-lcdefpme
-				/>
-			</div>
-		))}
+	<div class="grid-scroll" data-astro-cid-lcdefpme>
+		<div class="col-header arm-grid arm-sep" data-astro-cid-lcdefpme>
+			<span data-astro-cid-lcdefpme>마운드</span>
+			<span data-astro-cid-lcdefpme>투수</span>
+			{ARM_FIELDS.map((f) => (
+				<span class="ta-right" data-astro-cid-lcdefpme>{f.label}</span>
+			))}
+		</div>
+		<div class="row-list" data-astro-cid-lcdefpme>
+			{arms.map((p, i) => (
+				<div class="row arm-grid" data-astro-cid-lcdefpme>
+					<span class="row-role" data-astro-cid-lcdefpme>{ROLES[i]}</span>
+					<input
+						type="text"
+						class="in in-name"
+						value={p.name}
+						data-side={side}
+						data-group="arms"
+						data-index={i}
+						data-field="name"
+						data-astro-cid-lcdefpme
+					/>
+					{ARM_FIELDS.map((f) => (
+						<input
+							type="number"
+							step={f.step}
+							min="0"
+							class="in in-num"
+							value={p[f.field]}
+							data-side={side}
+							data-group="arms"
+							data-index={i}
+							data-field={f.field}
+							data-astro-cid-lcdefpme
+						/>
+					))}
+				</div>
+			))}
+		</div>
 	</div>
 
-	<div class="col-header bat-grid arm-sep" data-astro-cid-lcdefpme>
-		<span data-astro-cid-lcdefpme>후보</span>
-		<span data-astro-cid-lcdefpme>선수</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>AVG</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>OPS</span>
-		<span class="ta-right" data-astro-cid-lcdefpme>도루</span>
-	</div>
-	<div class="row-list" data-astro-cid-lcdefpme>
-		{bench.map((b, i) => (
-			<div class="row bat-grid" data-astro-cid-lcdefpme>
-				<span class="row-no bench-no" data-astro-cid-lcdefpme>{`B${i + 1}`}</span>
-				<input
-					type="text"
-					class="in in-name bench-in"
-					value={b.name}
-					data-side={side}
-					data-group="bench"
-					data-index={i}
-					data-field="name"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="0.001"
-					min="0"
-					class="in in-num bench-in"
-					value={b.avg}
-					data-side={side}
-					data-group="bench"
-					data-index={i}
-					data-field="avg"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="0.001"
-					min="0"
-					class="in in-num bench-in"
-					value={b.ops}
-					data-side={side}
-					data-group="bench"
-					data-index={i}
-					data-field="ops"
-					data-astro-cid-lcdefpme
-				/>
-				<input
-					type="number"
-					step="1"
-					min="0"
-					class="in in-num bench-in"
-					value={b.sb}
-					data-side={side}
-					data-group="bench"
-					data-index={i}
-					data-field="sb"
-					data-astro-cid-lcdefpme
-				/>
-			</div>
-		))}
+	<div class="grid-scroll" data-astro-cid-lcdefpme>
+		<div class="col-header bat-grid arm-sep" data-astro-cid-lcdefpme>
+			<span data-astro-cid-lcdefpme>후보</span>
+			<span data-astro-cid-lcdefpme>선수</span>
+			{BAT_FIELDS.map((f) => (
+				<span class="ta-right" data-astro-cid-lcdefpme>{f.label}</span>
+			))}
+		</div>
+		<div class="row-list" data-astro-cid-lcdefpme>
+			{bench.map((b, i) => (
+				<div class="row bat-grid" data-astro-cid-lcdefpme>
+					<span class="row-no bench-no" data-astro-cid-lcdefpme>{`B${i + 1}`}</span>
+					<input
+						type="text"
+						class="in in-name bench-in"
+						value={b.name}
+						data-side={side}
+						data-group="bench"
+						data-index={i}
+						data-field="name"
+						data-astro-cid-lcdefpme
+					/>
+					{BAT_FIELDS.map((f) => (
+						<input
+							type="number"
+							step={f.step}
+							min="0"
+							class="in in-num bench-in"
+							value={b[f.field]}
+							data-side={side}
+							data-group="bench"
+							data-index={i}
+							data-field={f.field}
+							data-astro-cid-lcdefpme
+						/>
+					))}
+				</div>
+			))}
+		</div>
 	</div>
 </div>

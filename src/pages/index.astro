@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import RosterCard from '../components/RosterCard.astro';
-import { L, ACCENT, initRoster, wStat } from '../data/kbo';
+import { L, ACCENT, initRoster, wStat, battingOps } from '../data/kbo';
 
 const roster = initRoster();
 const sel = { away: '1', home: '0' };
@@ -11,7 +11,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	roleLabel: side === 'away' ? '원정' : '홈',
 	accent: ACCENT[side],
 	teamIdx: sel[side],
-	lineupOps: wStat(roster[side].bat, 'ops', L.ops, 0.2, 1.5).toFixed(3),
+	lineupOps: wStat(roster[side].bat, (b) => battingOps(b, L.ops), L.ops, 0.2, 1.5).toFixed(3),
 	batters: roster[side].bat,
 	arms: roster[side].arms,
 	bench: roster[side].bench,
@@ -215,7 +215,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 
 	.col-header {
 		display: grid;
-		gap: 6px;
 		padding: 0 8px 3px 8px;
 		font-size: 10.5px;
 		color: #8a919d;
@@ -226,11 +225,18 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		border-top: 1px solid #eceef1;
 		margin-top: 6px;
 	}
+	.grid-scroll {
+		overflow-x: auto;
+	}
 	.bat-grid {
-		grid-template-columns: 28px 1fr 60px 64px 48px;
+		grid-template-columns: 22px minmax(74px, 1fr) repeat(9, 36px);
+		gap: 4px;
+		min-width: 478px;
 	}
 	.arm-grid {
-		grid-template-columns: 44px 1fr 56px 56px 52px;
+		grid-template-columns: 38px minmax(74px, 1fr) repeat(5, 40px);
+		gap: 4px;
+		min-width: 378px;
 	}
 	.ta-right {
 		text-align: right;
@@ -243,7 +249,6 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	}
 	.row {
 		display: grid;
-		gap: 6px;
 		align-items: center;
 		padding: 0 8px;
 	}
@@ -471,7 +476,21 @@ const sides = (['away', 'home'] as const).map((side) => ({
 </style>
 
 <script>
-	import { L, TEAMS, HOME_ADV, ERA_WEIGHT, ACCENT, num, clamp, wStat } from '../data/kbo';
+	import {
+		L,
+		TEAMS,
+		HOME_ADV,
+		ERA_WEIGHT,
+		ACCENT,
+		num,
+		clamp,
+		wStat,
+		battingAvg,
+		battingOps,
+		pitchingEra,
+		pitchingWhip,
+		pitchingK9,
+	} from '../data/kbo';
 
 	const C_AWAY = ACCENT.away;
 	const C_HOME = ACCENT.home;
@@ -495,20 +514,23 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		updateDirtyNote();
 	}
 
-	function readBatOps(side: string): { ops: string }[] {
-		const inputs = document.querySelectorAll<HTMLInputElement>(
-			`input[data-side="${side}"][data-group="bat"][data-field="ops"]`
-		);
-		const arr: { ops: string }[] = [];
-		inputs.forEach((el) => {
-			arr[Number(el.dataset.index)] = { ops: el.value };
-		});
-		return arr;
+	function readBatRaw(side: string): { [k: string]: string }[] {
+		const rows: { [k: string]: string }[] = [];
+		document
+			.querySelectorAll<HTMLInputElement>(`input[data-side="${side}"][data-group="bat"]`)
+			.forEach((el) => {
+				const i = Number(el.dataset.index);
+				const field = el.dataset.field as string;
+				if (field === 'name') return;
+				if (!rows[i]) rows[i] = {};
+				rows[i][field] = el.value;
+			});
+		return rows;
 	}
 
 	function updateLineupOps(side: string) {
-		const opsRows = readBatOps(side);
-		const val = wStat(opsRows, 'ops', L.ops, 0.2, 1.5);
+		const rows = readBatRaw(side);
+		const val = wStat(rows, (b) => battingOps(b, L.ops), L.ops, 0.2, 1.5);
 		const label = document.getElementById(`ops-${side}`);
 		if (label) label.textContent = `OPS ${val.toFixed(3)}`;
 	}
@@ -518,9 +540,7 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		input.addEventListener('input', () => {
 			if (field === 'name') return; // cosmetic only, never dirty
 			setDirty();
-			if (field === 'ops') {
-				updateLineupOps(input.dataset.side as string);
-			}
+			updateLineupOps(input.dataset.side as string);
 		});
 	});
 
@@ -544,25 +564,16 @@ const sides = (['away', 'home'] as const).map((side) => ({
 	});
 
 	function readSide(side: string) {
-		const batRows: { avg: string; ops: string; sb: string }[] = [];
-		document
-			.querySelectorAll<HTMLInputElement>(`input[data-side="${side}"][data-group="bat"]`)
-			.forEach((el) => {
-				const i = Number(el.dataset.index);
-				const field = el.dataset.field as 'avg' | 'ops' | 'sb' | 'name';
-				if (field === 'name') return;
-				if (!batRows[i]) batRows[i] = { avg: '', ops: '', sb: '' };
-				batRows[i][field] = el.value;
-			});
+		const batRows = readBatRaw(side);
 
-		const armRows: { era: string; whip: string; k9: string }[] = [];
+		const armRows: { [k: string]: string }[] = [];
 		document
 			.querySelectorAll<HTMLInputElement>(`input[data-side="${side}"][data-group="arms"]`)
 			.forEach((el) => {
 				const i = Number(el.dataset.index);
-				const field = el.dataset.field as 'era' | 'whip' | 'k9' | 'name';
+				const field = el.dataset.field as string;
 				if (field === 'name') return;
-				if (!armRows[i]) armRows[i] = { era: '', whip: '', k9: '' };
+				if (!armRows[i]) armRows[i] = {};
 				armRows[i][field] = el.value;
 			});
 
@@ -572,9 +583,9 @@ const sides = (['away', 'home'] as const).map((side) => ({
 		const teamIdx = teamSelect ? Number(teamSelect.value) : 0;
 
 		const armAt = (i: number) => ({
-			era: clamp(num(armRows[i].era, L.era), 0.5, 12),
-			whip: clamp(num(armRows[i].whip, L.whip), 0.6, 2.5),
-			k9: clamp(num(armRows[i].k9, L.k9), 2, 15),
+			era: clamp(pitchingEra(armRows[i], L.era), 0.5, 12),
+			whip: clamp(pitchingWhip(armRows[i], L.whip), 0.6, 2.5),
+			k9: clamp(pitchingK9(armRows[i], L.k9), 2, 15),
 		});
 		const sp = armAt(0);
 		const bp = { era: 0, whip: 0, k9: 0 };
@@ -592,8 +603,8 @@ const sides = (['away', 'home'] as const).map((side) => ({
 			sp,
 			bp,
 			eraComb: 0.65 * sp.era + 0.35 * bp.era,
-			ops: wStat(batRows, 'ops', L.ops, 0.2, 1.5),
-			avg: wStat(batRows, 'avg', L.avg, 0.15, 0.45),
+			ops: wStat(batRows, (b) => battingOps(b, L.ops), L.ops, 0.2, 1.5),
+			avg: wStat(batRows, (b) => battingAvg(b, L.avg), L.avg, 0.15, 0.45),
 			sb,
 			name: TEAMS[teamIdx] || TEAMS[0],
 		};
